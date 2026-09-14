@@ -47,4 +47,16 @@ public class JobApplicationsController : ControllerBase
     {
         return Ok(Applications);
     }
+
+    [HttpPost]
+    public ActionResult<JobApplication> Create(JobApplication application)
+    {
+        application.Id = Applications.Count == 0
+            ? 1
+            : Applications.Max(a => a.Id) + 1;
+
+        Applications.Add(application);
+
+        return StatusCode(201, application);
+    }
 }

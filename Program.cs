@@ -4,17 +4,18 @@ var builder = WebApplication.CreateBuilder(args);
 //lägg till stöd för controllers
 builder.Services.AddControllers();
 
-//OpenAPI används för att beskriva API:et
-builder.Services.AddOpenApi();
+
+//lägg till stöd för swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    app.UseSwagger();
+    app.UseSwaggerUI();
 }
-
-app.UseHttpsRedirection();
 
 
 //Gör våra controllers tillgängliga via endpoints
