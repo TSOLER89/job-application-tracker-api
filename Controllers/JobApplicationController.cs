@@ -59,4 +59,23 @@ public class JobApplicationsController : ControllerBase
 
         return StatusCode(201, application);
     }
+
+    [HttpPut("{id}")]
+    public ActionResult<JobApplication> Update(int id, JobApplication updatedApplication)
+    {
+        var application = Applications.FirstOrDefault(a => a.Id == id);
+        if (application == null)
+        {
+            return NotFound();
+        }
+        application.Company = updatedApplication.Company;
+        application.Position = updatedApplication.Position;
+        application.Location = updatedApplication.Location;
+        application.DateApplied = updatedApplication.DateApplied;
+        application.Status = updatedApplication.Status;
+        application.Notes = updatedApplication.Notes;
+
+        return Ok(application);
+
+    }
 }
