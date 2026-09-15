@@ -1,9 +1,18 @@
+using job_application_tracker_api.Data;
+using Microsoft.EntityFrameworkCore;
+
+
 var builder = WebApplication.CreateBuilder(args);
 
 
 //lägg till stöd för controllers
 builder.Services.AddControllers();
 
+//lägg till stöd för Entity Framework och SQL Server
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"))
+);
 
 //lägg till stöd för swagger
 builder.Services.AddEndpointsApiExplorer();
