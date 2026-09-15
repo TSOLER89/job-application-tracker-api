@@ -64,6 +64,25 @@ public class JobApplicationsController : ControllerBase
         return Ok(application);
     }
 
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var application = await _context.JobApplications
+            .FirstOrDefaultAsync(a => a.Id == id);
+
+        if (application == null)
+        {
+            return NotFound();
+        }
+
+        _context.JobApplications.Remove(application);
+        await _context.SaveChangesAsync();
+
+        return NoContent();
+    }
+
+
     [HttpPost("upload")]
     public async Task<ActionResult> UploadImage(IFormFile file)
     {
