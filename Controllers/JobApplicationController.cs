@@ -1,5 +1,8 @@
-﻿using job_application_tracker_api.Models;
+﻿using job_application_tracker_api.Data;
+using job_application_tracker_api.Models;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
 
 namespace job_application_tracker_api.Controllers;
 
@@ -7,76 +10,58 @@ namespace job_application_tracker_api.Controllers;
 [Route("api/[controller]")]
 public class JobApplicationsController : ControllerBase
 {
-    private static readonly List<JobApplication> Applications =
-    [
-        new JobApplication
-        {
-            Id = 1,
-            Company = "Consid",
-            Position = "Junior .NET-utvecklare",
-            Location = "Linköping",
-            DateApplied = new DateOnly(2026, 9, 1),
-            Status = "Intervju",
-            Notes = ""
-        },
+    private readonly ApplicationDbContext _context;
 
-        new JobApplication
-        {
-            Id = 2,
-            Company = "Sectra",
-            Position = "Systemutvecklare",
-            Location = "Linköping",
-            DateApplied = new DateOnly(2026, 9, 9),
-            Status = "Ansökt",
-            Notes = ""
-        },
+    public JobApplicationsController(ApplicationDbContext context)
+    {
+        _context = context;
+    }
 
-        new JobApplication
-        {
-            Id = 3,
-            Company = "Saab",
-            Position = "Junior Software Developer",
-            Location = "Linköping",
-            Status = "Intresserad",
-            Notes = ""
-        }
-    ];
 
     [HttpGet]
-    public ActionResult<List<JobApplication>> GetAll()
+    public async Task<ActionResult<List<JobApplication>>> GetAll()
     {
-        return Ok(Applications);
+        var applications = await _context.JobApplications
+            .ToListAsync();
+
+        return Ok(applications);
     }
 
     [HttpPost]
-    public ActionResult<JobApplication> Create(JobApplication application)
+    public async Task<ActionResult<JobApplication>> Create(JobApplication application)
     {
-        application.Id = Applications.Count == 0
-            ? 1
-            : Applications.Max(a => a.Id) + 1;
-
-        Applications.Add(application);
+        _context.JobApplications.Add(application);
+        await _context.SaveChangesAsync();
 
         return StatusCode(201, application);
     }
 
+
     [HttpPut("{id}")]
-    public ActionResult<JobApplication> Update(int id, JobApplication updatedApplication)
+    public async Task<ActionResult<JobApplication>> Update(
+        int id,
+        JobApplication updatedApplication
+    )
     {
-        var application = Applications.FirstOrDefault(a => a.Id == id);
+        var application = await _context.JobApplications
+            .FirstOrDefaultAsync(a => a.Id == id);
+
         if (application == null)
         {
             return NotFound();
         }
+
         application.Company = updatedApplication.Company;
         application.Position = updatedApplication.Position;
         application.Location = updatedApplication.Location;
         application.DateApplied = updatedApplication.DateApplied;
         application.Status = updatedApplication.Status;
         application.Notes = updatedApplication.Notes;
+        application.ImageUrl = updatedApplication.ImageUrl;
+
+        await _context.SaveChangesAsync();
 
         return Ok(application);
-
     }
 
     [HttpPost("upload")]
@@ -95,14 +80,24 @@ public class JobApplicationsController : ControllerBase
 
         Directory.CreateDirectory(uploadsFolder);
 
-        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-        var filePath = Path.Combine(uploadsFolder, fileName);
+        var fileName =
+            $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
 
-        await using var stream = new FileStream(filePath, FileMode.Create);
+        var filePath = Path.Combine(
+            uploadsFolder,
+            fileName
+        );
+
+        await using var stream =
+            new FileStream(filePath, FileMode.Create);
+
         await file.CopyToAsync(stream);
 
         var imageUrl = $"/uploads/{fileName}";
 
-        return Ok(new { imageUrl });
+        return Ok(new
+        {
+            imageUrl
+        });
     }
 }
