@@ -35,6 +35,10 @@ if (app.Environment.IsDevelopment())
 app.UseStaticFiles();
 
 
+
+app.UseCors("ReactApp");
+
+
 //Gör våra controllers tillgängliga via endpoints
 app.MapControllers();
 
