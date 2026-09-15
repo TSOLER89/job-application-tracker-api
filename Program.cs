@@ -17,6 +17,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+//lägg till stöd för statiska filer (t.ex. index.html)
+app.UseStaticFiles();
+
 
 //Gör våra controllers tillgängliga via endpoints
 app.MapControllers();

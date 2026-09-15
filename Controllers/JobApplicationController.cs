@@ -78,4 +78,31 @@ public class JobApplicationsController : ControllerBase
         return Ok(application);
 
     }
+
+    [HttpPost("upload")]
+    public async Task<ActionResult> UploadImage(IFormFile file)
+    {
+        if (file == null || file.Length == 0)
+        {
+            return BadRequest("Ingen fil valdes.");
+        }
+        
+        var uploadsFolder = Path.Combine(
+            Directory.GetCurrentDirectory(),
+            "wwwroot",
+            "uploads"
+        );
+
+        Directory.CreateDirectory(uploadsFolder);
+
+        var fileName = $"{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
+        var filePath = Path.Combine(uploadsFolder, fileName);
+
+        await using var stream = new FileStream(filePath, FileMode.Create);
+        await file.CopyToAsync(stream);
+
+        var imageUrl = $"/uploads/{fileName}";
+
+        return Ok(new { imageUrl });
+    }
 }
