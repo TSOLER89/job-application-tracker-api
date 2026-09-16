@@ -83,7 +83,7 @@ public class JobApplicationsController : ControllerBase
     }
 
 
-    [HttpPost("upload")]
+    [HttpPost("uploadimage")]
     public async Task<ActionResult> UploadImage(IFormFile file)
     {
         if (file == null || file.Length == 0)
