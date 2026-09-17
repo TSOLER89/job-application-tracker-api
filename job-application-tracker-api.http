@@ -1,6 +1,43 @@
 @job_application_tracker_api_HostAddress = http://localhost:5250
 
-GET {{job_application_tracker_api_HostAddress}}/weatherforecast/
+### Hämta alla jobbansökningar
+GET {{job_application_tracker_api_HostAddress}}/api/JobApplications
 Accept: application/json
 
 ###
+
+### Skapa en jobbansökan
+POST {{job_application_tracker_api_HostAddress}}/api/JobApplications
+Content-Type: application/json
+
+{
+  "company": "Testföretag",
+  "position": "Systemutvecklare",
+  "location": "Linköping",
+  "dateApplied": "2026-09-17",
+  "status": "Ansökt",
+  "notes": "Test från .http-filen",
+  "imageUrl": null
+}
+
+###
+
+### Uppdatera jobbansökan med id 1
+PUT {{job_application_tracker_api_HostAddress}}/api/JobApplications/17
+Content-Type: application/json
+
+{
+  "id": 1,
+  "company": "Testföretag",
+  "position": "Systemutvecklare .NET",
+  "location": "Linköping",
+  "dateApplied": "2026-09-17",
+  "status": "Intervju",
+  "notes": "Uppdaterad från .http-filen",
+  "imageUrl": null
+}
+
+###
+
+### Ta bort jobbansökan med id 1
+DELETE {{job_application_tracker_api_HostAddress}}/api/JobApplications/17
