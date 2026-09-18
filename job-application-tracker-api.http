@@ -1,4 +1,5 @@
 @job_application_tracker_api_HostAddress = http://localhost:5250
+@applicationId = 17
 
 ### Hämta alla jobbansökningar
 GET {{job_application_tracker_api_HostAddress}}/api/JobApplications
@@ -22,12 +23,11 @@ Content-Type: application/json
 
 ###
 
-### Uppdatera jobbansökan med id 1
-PUT {{job_application_tracker_api_HostAddress}}/api/JobApplications/17
+### Uppdatera en befintlig jobbansökan
+PUT {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
 Content-Type: application/json
 
 {
-  "id": 1,
   "company": "Testföretag",
   "position": "Systemutvecklare .NET",
   "location": "Linköping",
@@ -39,5 +39,5 @@ Content-Type: application/json
 
 ###
 
-### Ta bort jobbansökan med id 1
-DELETE {{job_application_tracker_api_HostAddress}}/api/JobApplications/17
+### Ta bort en befintlig jobbansökan
+DELETE {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
