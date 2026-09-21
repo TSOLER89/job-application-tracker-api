@@ -203,8 +203,31 @@ Frontend:
 
 https://github.com/TSOLER89/job-application-tracker
 
+
+Recommended Start Order
+
+When running the complete web application locally:
+
+Start the backend first:
+
+dotnet run
+
+Start the frontend in a second terminal:
+
+npm run dev
+
+Open:
+
+http://localhost:5173
+
+The frontend will then communicate with the backend at:
+
+http://localhost:5250
+
+
+
+
 ## Developer
 
 Tsoler Hayitian
 .NET Software Developer Student
-TUC University of Applied Sciences
