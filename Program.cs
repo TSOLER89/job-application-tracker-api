@@ -7,6 +7,11 @@ var builder = WebApplication.CreateBuilder(args);
 
 //lägg till stöd för controllers
 builder.Services.AddControllers();
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+        context.ProblemDetails.Extensions["traceId"] = context.HttpContext.TraceIdentifier;
+});
 
 //lägg till stöd för Entity Framework och SQL Server
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -33,6 +38,14 @@ builder.Services.AddCors(options =>
 
 
 var app = builder.Build();
+
+app.UseExceptionHandler(new ExceptionHandlerOptions
+{
+    StatusCodeSelector = exception => exception is BadHttpRequestException badRequest
+        ? badRequest.StatusCode
+        : StatusCodes.Status500InternalServerError
+});
+app.UseStatusCodePages();
 
 if (app.Environment.IsDevelopment())
 {
