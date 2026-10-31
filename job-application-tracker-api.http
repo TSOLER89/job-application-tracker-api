@@ -1,6 +1,21 @@
 @job_application_tracker_api_HostAddress = http://localhost:5250
 @applicationId = 17
 
+### Hämta en jobbansökan
+GET {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
+Accept: application/json
+
+### Kontrollera valideringsfel (400)
+POST {{job_application_tracker_api_HostAddress}}/api/JobApplications
+Content-Type: application/json
+
+{
+  "company": "",
+  "position": "Systemutvecklare",
+  "location": "Linköping",
+  "status": "Ogiltig status"
+}
+
 ### Hämta alla jobbansökningar
 GET {{job_application_tracker_api_HostAddress}}/api/JobApplications
 Accept: application/json
