@@ -4,6 +4,7 @@ using job_application_tracker_api.Auth;
 using job_application_tracker_api.Contracts;
 using job_application_tracker_api.Data;
 using job_application_tracker_api.Models;
+using job_application_tracker_api.Email;
 using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -60,6 +61,7 @@ public sealed class AuthController(UserManager<IdentityUser> users, ApplicationD
     [Authorize]
     public async Task<IActionResult> Logout(CancellationToken cancellationToken)
     {
+        GmailAuthentication.CancelPendingBrowserConnections(HttpContext);
         if (HttpContext.Items["SessionHash"] is string hash)
         {
             await database.AuthSessions.Where(session => session.TokenHash == hash)
@@ -74,6 +76,7 @@ public sealed class AuthController(UserManager<IdentityUser> users, ApplicationD
 
     private async Task<IActionResult> StartSession(IdentityUser user, int statusCode, bool bearerMode)
     {
+        GmailAuthentication.CancelPendingBrowserConnections(HttpContext);
         var token = Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
         var expiresAt = DateTimeOffset.UtcNow.AddDays(30);
         database.AuthSessions.Add(new AuthSession

@@ -16,6 +16,8 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
     public DbSet<JobApplication> JobApplications { get; set; }
     public DbSet<AuthSession> AuthSessions { get; set; }
     public DbSet<UploadedImage> UploadedImages { get; set; }
+    public DbSet<EmailConnection> EmailConnections { get; set; }
+    public DbSet<EmailConnectionAttempt> EmailConnectionAttempts { get; set; }
 
     protected override void OnModelCreating(ModelBuilder builder)
     {
@@ -30,5 +32,15 @@ public class ApplicationDbContext : IdentityDbContext<IdentityUser>
         builder.Entity<UploadedImage>().HasKey(image => image.FileName);
         builder.Entity<UploadedImage>().Property(image => image.FileName).HasMaxLength(64);
         builder.Entity<UploadedImage>().HasOne<IdentityUser>().WithMany().HasForeignKey(image => image.UserId);
+        builder.Entity<EmailConnection>().Property(value => value.Provider).HasMaxLength(20);
+        builder.Entity<EmailConnection>().Property(value => value.ProviderAccountId).HasMaxLength(254);
+        builder.Entity<EmailConnection>().Property(value => value.Email).HasMaxLength(254);
+        builder.Entity<EmailConnection>().HasIndex(value => new { value.UserId, value.Provider, value.ProviderAccountId }).IsUnique();
+        builder.Entity<EmailConnection>().HasOne<IdentityUser>().WithMany().HasForeignKey(value => value.UserId);
+        builder.Entity<EmailConnectionAttempt>().Property(value => value.TicketHash).HasMaxLength(64);
+        builder.Entity<EmailConnectionAttempt>().Property(value => value.SessionHash).HasMaxLength(64);
+        builder.Entity<EmailConnectionAttempt>().HasIndex(value => value.TicketHash).IsUnique();
+        builder.Entity<EmailConnectionAttempt>().HasIndex(value => value.ExpiresAt);
+        builder.Entity<EmailConnectionAttempt>().HasOne<IdentityUser>().WithMany().HasForeignKey(value => value.UserId);
     }
 }

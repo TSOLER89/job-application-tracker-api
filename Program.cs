@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using job_application_tracker_api.Email;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
@@ -27,6 +28,7 @@ builder.Services.AddIdentityCore<IdentityUser>(options =>
 builder.Services.AddAuthentication(SessionAuthenticationHandler.SchemeName)
     .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { });
 builder.Services.AddAuthorization();
+builder.Services.AddGmailConnections(builder.Configuration, builder.Environment);
 builder.Services.AddAntiforgery(options =>
 {
     options.HeaderName = "X-CSRF-TOKEN";
@@ -117,6 +119,16 @@ else app.UseHttpsRedirection();
 
 // Uploads are served by the authenticated ImagesController, not public static-file middleware.
 app.UseRouting();
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path == "/signin-gmail" &&
+        !context.RequestServices.GetRequiredService<GmailConnectionOptions>().MatchesApi(context.Request))
+    {
+        context.Response.StatusCode = 400;
+        return;
+    }
+    await next(context);
+});
 app.UseCors("ReactApp");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -145,3 +157,5 @@ app.Use(async (context, next) =>
 });
 app.MapControllers();
 app.Run();
+
+public partial class Program { }

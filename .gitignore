@@ -4,3 +4,5 @@ obj/
 wwwroot/uploads/
 *.user
 App_Data/
+client_secret*.json
+google-oauth*.json
