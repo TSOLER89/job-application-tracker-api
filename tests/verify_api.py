@@ -77,7 +77,9 @@ class ApiChecks(unittest.TestCase):
             self.assertEqual(saved["notes"], "")
             self.assertIsNone(saved["dateApplied"])
             self.assertEqual(set(saved), {"id", "company", "position", "location", "status",
-                                          "notes", "dateApplied", "imageUrl"})
+                                          "notes", "dateApplied", "imageUrl", "applicationDeadline", "followUpDate"})
+            self.assertIsNone(saved["applicationDeadline"])
+            self.assertIsNone(saved["followUpDate"])
             location = urllib.parse.urlsplit(headers["Location"]).path
             code, _, body = request("GET", location)
             self.assertEqual(code, 200)
@@ -97,6 +99,48 @@ class ApiChecks(unittest.TestCase):
         finally:
             if application_id is not None:
                 self.assertEqual(request("DELETE", f"{ENDPOINT}/{application_id}")[0], 204)
+
+    def test_planning_dates_round_trip_update_and_clear(self):
+        application_id = None
+        try:
+            payload = self.payload(applicationDeadline="2026-11-30", followUpDate="2026-12-02")
+            code, _, body = request("POST", ENDPOINT, payload)
+            self.assertEqual(code, 201, body)
+            saved = json.loads(body)
+            application_id = saved["id"]
+            path = f"{ENDPOINT}/{application_id}"
+            self.assertEqual(saved["applicationDeadline"], "2026-11-30")
+            self.assertEqual(saved["followUpDate"], "2026-12-02")
+            self.assertIsNone(saved["dateApplied"])
+            self.assertEqual(json.loads(request("GET", path)[2]), saved)
+            self.assertIn(saved, json.loads(request("GET", ENDPOINT)[2]))
+            saved.update(applicationDeadline="2024-02-29", followUpDate="2026-12-10", notes="Keep dates")
+            code, _, body = request("PUT", path, saved)
+            self.assertEqual(code, 200, body)
+            self.assertEqual(json.loads(body), saved)
+            saved.update(applicationDeadline=None, followUpDate=None)
+            code, _, body = request("PUT", path, saved)
+            self.assertEqual(code, 200, body)
+            self.assertEqual(json.loads(request("GET", path)[2]), saved)
+        finally:
+            if application_id is not None:
+                self.assertEqual(request("DELETE", f"{ENDPOINT}/{application_id}")[0], 204)
+
+    def test_invalid_planning_dates_are_rejected_without_changing_saved_dates(self):
+        code, _, body = request("POST", ENDPOINT, self.payload(applicationDeadline="2026-11-30"))
+        self.assertEqual(code, 201, body)
+        saved = json.loads(body)
+        path = f"{ENDPOINT}/{saved['id']}"
+        try:
+            for field in ("applicationDeadline", "followUpDate"):
+                for value in ("2026-02-30", "2026-13-01", "", "2026-11-01T12:00:00Z"):
+                    with self.subTest(field=field, value=value):
+                        payload = {**saved, field: value}
+                        self.assert_problem(request("POST", ENDPOINT, payload), 400)
+                        self.assert_problem(request("PUT", path, payload), 400)
+                        self.assertEqual(json.loads(request("GET", path)[2]), saved)
+        finally:
+            self.assertEqual(request("DELETE", path)[0], 204)
 
     def test_invalid_fields_return_field_errors(self):
         for field, value in [("company", " "), ("company", None), ("position", ""),
