@@ -19,7 +19,8 @@ import uuid
 BASE_URL = (sys.argv.pop(1) if len(sys.argv) > 1 else "http://localhost:5251").rstrip("/")
 if urllib.parse.urlsplit(BASE_URL).hostname not in ("localhost", "127.0.0.1", "::1"):
     raise SystemExit("These checks must target a local test server.")
-UPLOAD_ROOT = (Path(__file__).resolve().parents[1] / "wwwroot" / "uploads").resolve()
+UPLOAD_ROOT = (Path(__file__).resolve().parents[1] / "App_Data" / "uploads").resolve()
+TOKEN = None
 ENDPOINT = "/api/JobApplications"
 PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII="
@@ -29,7 +30,7 @@ PNG = base64.b64decode(
 def request(method, path, body=None, content_type="application/json", headers=None):
     data = json.dumps(body).encode() if isinstance(body, dict) else body
     req = urllib.request.Request(BASE_URL + path, data=data, method=method,
-                                 headers={"Content-Type": content_type, **(headers or {})})
+                                 headers={"Content-Type": content_type, **({"Authorization": "Bearer " + TOKEN} if TOKEN else {}), **(headers or {})})
     try:
         response = urllib.request.urlopen(req, timeout=45)
     except urllib.error.HTTPError as error:
@@ -166,4 +167,11 @@ class ApiChecks(unittest.TestCase):
 
 
 if __name__ == "__main__":
+    code, _, body = request("POST", "/api/auth/register", {
+        "email": "verify-api-" + uuid.uuid4().hex + "@example.test",
+        "password": "Verification12345"
+    }, headers={"X-Auth-Mode": "bearer"})
+    if code != 201:
+        raise SystemExit("Could not create a disposable test account: " + body.decode())
+    TOKEN = json.loads(body)["accessToken"]
     unittest.main(verbosity=2)
