@@ -142,6 +142,36 @@ class ApiChecks(unittest.TestCase):
         finally:
             self.assertEqual(request("DELETE", path)[0], 204)
 
+    def test_follow_up_date_cannot_precede_application_date(self):
+        payload = {**self.payload(), "status": "Ansökt", "dateApplied": "2026-11-15",
+                   "applicationDeadline": "2026-11-01", "followUpDate": "2026-11-14"}
+        problem = self.assert_problem(request("POST", ENDPOINT, payload), 400)
+        self.assertIn("Uppföljningsdatum får inte ligga före ansökningsdatumet.",
+                      [message for messages in problem["errors"].values() for message in messages])
+        payload["followUpDate"] = "2026-11-15"
+        code, _, body = request("POST", ENDPOINT, payload)
+        self.assertEqual(code, 201, body)
+        saved = json.loads(body)
+        path = f"{ENDPOINT}/{saved['id']}"
+        try:
+            for status in ("Ansökt", "Intervju", "Erbjudande", "Avslag"):
+                with self.subTest(status=status):
+                    invalid = {**saved, "status": status, "followUpDate": "2026-11-14"}
+                    self.assert_problem(request("PUT", path, invalid), 400)
+                    self.assertEqual(json.loads(request("GET", path)[2]), saved)
+            self.assert_problem(request("PUT", path, {**saved, "dateApplied": "2026-11-16"}), 400)
+            for applied, follow_up in (("2026-11-15", "2026-11-30"), ("2026-11-15", None), (None, "2026-10-31")):
+                valid = {**saved, "dateApplied": applied, "followUpDate": follow_up}
+                code, _, body = request("PUT", path, valid)
+                self.assertEqual(code, 200, body)
+                self.assertEqual(json.loads(body)["followUpDate"], follow_up)
+            # Interested jobs have no persisted application date.
+            code, _, body = request("PUT", path, {**saved, "status": "Intresserad", "followUpDate": "2026-11-14"})
+            self.assertEqual(code, 200, body)
+            self.assertIsNone(json.loads(body)["dateApplied"])
+        finally:
+            self.assertEqual(request("DELETE", path)[0], 204)
+
     def test_invalid_fields_return_field_errors(self):
         for field, value in [("company", " "), ("company", None), ("position", ""),
                              ("location", ""), ("status", "Unknown"), ("status", None),
