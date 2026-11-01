@@ -32,6 +32,11 @@ public sealed class JobApplicationRequest : IValidatableObject
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
+        if (Status != "Intresserad" && DateApplied is { } applied && FollowUpDate is { } followUp && followUp < applied)
+        {
+            yield return new ValidationResult(
+                "Uppföljningsdatum får inte ligga före ansökningsdatumet.", [nameof(FollowUpDate)]);
+        }
         string[] statuses = ["Intresserad", "Ansökt", "Intervju", "Erbjudande", "Avslag"];
         if (!statuses.Contains(Status))
         {
