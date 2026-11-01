@@ -1,12 +1,45 @@
 @job_application_tracker_api_HostAddress = http://localhost:5250
 @applicationId = 17
+@sessionToken = REPLACE_WITH_A_LOCAL_TEST_TOKEN
+
+### Create a disposable test account (choose your own test credentials)
+POST {{job_application_tracker_api_HostAddress}}/api/auth/register
+X-Auth-Mode: bearer
+Content-Type: application/json
+
+{
+  "email": "test@example.test",
+  "password": "ExamplePassword123"
+}
+
+### Log in, then copy accessToken into sessionToken locally. Never commit a real token.
+POST {{job_application_tracker_api_HostAddress}}/api/auth/login
+X-Auth-Mode: bearer
+Content-Type: application/json
+
+{
+  "email": "test@example.test",
+  "password": "ExamplePassword123"
+}
+
+### Inspect the current session
+GET {{job_application_tracker_api_HostAddress}}/api/auth/session
+X-Auth-Mode: bearer
+Authorization: Bearer {{sessionToken}}
+
+### Revoke this session
+POST {{job_application_tracker_api_HostAddress}}/api/auth/logout
+Authorization: Bearer {{sessionToken}}
+
 
 ### Hämta en jobbansökan
 GET {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
+Authorization: Bearer {{sessionToken}}
 Accept: application/json
 
 ### Kontrollera valideringsfel (400)
 POST {{job_application_tracker_api_HostAddress}}/api/JobApplications
+Authorization: Bearer {{sessionToken}}
 Content-Type: application/json
 
 {
@@ -18,12 +51,14 @@ Content-Type: application/json
 
 ### Hämta alla jobbansökningar
 GET {{job_application_tracker_api_HostAddress}}/api/JobApplications
+Authorization: Bearer {{sessionToken}}
 Accept: application/json
 
 ###
 
 ### Skapa en jobbansökan
 POST {{job_application_tracker_api_HostAddress}}/api/JobApplications
+Authorization: Bearer {{sessionToken}}
 Content-Type: application/json
 
 {
@@ -40,6 +75,7 @@ Content-Type: application/json
 
 ### Uppdatera en befintlig jobbansökan
 PUT {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
+Authorization: Bearer {{sessionToken}}
 Content-Type: application/json
 
 {
@@ -56,3 +92,4 @@ Content-Type: application/json
 
 ### Ta bort en befintlig jobbansökan
 DELETE {{job_application_tracker_api_HostAddress}}/api/JobApplications/{{applicationId}}
+Authorization: Bearer {{sessionToken}}

@@ -114,6 +114,8 @@ Entity Framework Core is used to read and write data.
 
 ## API Endpoints
 
+All application and image endpoints require an authenticated account. Requests without a valid session return `401`; another account's application or image returns `404`.
+
 | Method | Endpoint                           | Description                    |
 | ------ | ---------------------------------- | ------------------------------ |
 | GET    | `/api/JobApplications`             | Retrieves all job applications |
@@ -139,7 +141,7 @@ See [Microsoft's file upload guidance](https://learn.microsoft.com/en-us/aspnet/
 Uploaded images are stored locally in:
 
 ```text
-wwwroot/uploads
+App_Data/uploads
 ```
 
 The API returns a relative image path, for example:
@@ -151,6 +153,50 @@ The API returns a relative image path, for example:
 The database stores the image path instead of the actual image file.
 
 The folder containing uploaded files is ignored by Git so that uploaded images are not committed to the repository.
+
+Images are served through the authenticated `/uploads/{fileName}` endpoint, with owner checks and `Cache-Control: private, no-store`. The public static-file middleware is no longer used. Existing files in `wwwroot/uploads` are retained and remain available to the assigned owner through the same protected endpoint.
+
+## Accounts and Sessions
+
+ASP.NET Core Identity manages account creation, password hashes, unique emails, and lockout. Passwords must be 10–128 characters with uppercase, lowercase, and a digit. Five failed password attempts temporarily lock that account for 15 minutes. Registration and login are limited to 30 attempts per minute per client IP.
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/api/auth/session` | Current account or `user: null`; also supplies the web CSRF token |
+| POST | `/api/auth/register` | Create an account and sign in |
+| POST | `/api/auth/login` | Sign in with email and password |
+| POST | `/api/auth/logout` | Revoke the current session |
+
+Sessions last up to 30 days and are stored server-side as token hashes. Logout revokes the current device/browser session without signing out other devices.
+
+The web client uses a persistent HttpOnly, SameSite=Strict cookie. Unsafe web requests send the `X-CSRF-TOKEN` value obtained from `/api/auth/session`; browser requests use `credentials: include`. Native clients send `X-Auth-Mode: bearer` when registering or logging in, store the returned opaque `accessToken` in Expo SecureStore, and send `Authorization: Bearer <token>` on API and private-image requests. These session tokens are not JWTs or Gmail/Outlook access tokens.
+
+In Swagger, set `X-Auth-Mode` to `bearer` on login, then paste `accessToken` into **Authorize**. The `.http` file contains disposable-account examples. Do not commit real credentials or session tokens.
+
+### Preserving Existing Applications
+
+The ownership migration adds a nullable `UserId`; it does not delete or automatically assign existing applications. New accounts never claim legacy records just because they register first or use a particular email address.
+
+Before migrating an existing database, take a local application-data snapshot:
+
+```bash
+dotnet run -- --backup-legacy true
+dotnet ef database update
+```
+
+Snapshots are written to the Git-ignored `bin/Backups` folder. After the intended owner creates their own account in the app, a trusted local operator can assign all still-unassigned records:
+
+```bash
+dotnet run -- --assign-legacy-to you@example.com
+```
+
+This command only updates rows with `UserId = null` and fails if the account does not exist. It does not change another user's records. There is no HTTP endpoint for claiming legacy data. Restart/reload the clients afterward.
+
+### Before Public Deployment
+
+This milestone provides local account access and isolated data. Email verification, password recovery, a disposable demo mode, and Gmail/Microsoft OAuth connections are separate upcoming milestones. Registering a JobTrack account does not verify ownership of the email inbox or connect it for import.
+
+Use HTTPS for production. Serve the web and API on the same site for the strict cookies, configure explicit `Cors:AllowedOrigins`, and persist/protect Data Protection keys for the hosting environment. Local development allows HTTP for Expo Go on a trusted local network. `App_Data` contains private upload storage and Data Protection keys and must never be committed or served publicly. On Windows, persisted keys are protected with DPAPI.
 
 ## CORS
 
@@ -245,9 +291,10 @@ The API can be tested using Swagger or the `job-application-tracker-api.http` fi
 
 ## Integration Checks
 
-With Python 3.10+ installed, start the updated API in one terminal:
+With Python 3.10+ installed, use a disposable LocalDB database in a separate terminal instead of the personal application database:
 
-```bash
+```powershell
+.\tests\prepare-local-test-db.ps1
 dotnet run --urls "http://localhost:5251"
 ```
 
@@ -255,10 +302,11 @@ Then run in another terminal from this repository:
 
 ```bash
 python tests/verify_api.py http://localhost:5251
+python tests/verify_auth.py http://localhost:5251
 ```
 
 The checks exercise CRUD, response compatibility, validation errors, upload limits, file signatures, static images, and web CORS.
-They use the configured local database, create and delete their own test application, and remove their own uploaded image from this repository's upload directory. Run against a local test server started from this repository; existing records are not edited.
+They create disposable test accounts, delete their own application records, and remove their own uploaded images. Account checks also verify isolation, private-image ownership, CSRF, session revocation, and lockout. The test database retains test accounts for inspection. Close its server terminal afterward so that its connection-string environment variable is not reused for the normal application database.
 
 ## Reflection
 
