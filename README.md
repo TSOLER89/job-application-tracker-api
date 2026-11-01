@@ -212,6 +212,8 @@ Native Expo Go requests do not use browser CORS. The phone still needs network a
 
 ## Request Validation
 
+When both dates are supplied for a job whose status is not `Intresserad`, `followUpDate` must be on or after `dateApplied`. Earlier dates return a field validation error on create and update. Follow-ups after `applicationDeadline` are allowed: that deadline concerns sending the application, not contacting the employer afterward. If either date is absent, there is no ordering comparison.
+
 Create and update endpoints accept `JobApplicationRequest` instead of binding the database entity directly.
 The response fields are unchanged, preserving compatibility with the web and mobile applications.
 The API generates IDs; a client-supplied `id` is ignored.
