@@ -14,6 +14,8 @@ public class JobApplication
     public string Location { get; set; } = string.Empty;
 
     public DateOnly? DateApplied { get; set; }
+    public DateOnly? ApplicationDeadline { get; set; }
+    public DateOnly? FollowUpDate { get; set; }
 
     public string Status { get; set; } = "Ansökt";
 

@@ -18,6 +18,8 @@ public sealed class JobApplicationRequest : IValidatableObject
     public string Location { get; init; } = string.Empty;
 
     public DateOnly? DateApplied { get; init; }
+    public DateOnly? ApplicationDeadline { get; init; }
+    public DateOnly? FollowUpDate { get; init; }
 
     [Required(ErrorMessage = "Status måste fyllas i.")]
     public string Status { get; init; } = "Ansökt";

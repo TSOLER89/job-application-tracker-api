@@ -139,6 +139,8 @@ public class JobApplicationsController(ApplicationDbContext context, IWebHostEnv
         application.Position = request.Position.Trim();
         application.Location = request.Location.Trim();
         application.DateApplied = request.Status == "Intresserad" ? null : request.DateApplied;
+        application.ApplicationDeadline = request.ApplicationDeadline;
+        application.FollowUpDate = request.FollowUpDate;
         application.Status = request.Status;
         application.Notes = request.Notes?.Trim() ?? string.Empty;
         application.ImageUrl = string.IsNullOrEmpty(request.ImageUrl) ? null : request.ImageUrl;

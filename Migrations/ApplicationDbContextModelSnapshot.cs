@@ -254,11 +254,17 @@ namespace job_application_tracker_api.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
+                    b.Property<DateOnly?>("ApplicationDeadline")
+                        .HasColumnType("date");
+
                     b.Property<string>("Company")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<DateOnly?>("DateApplied")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("FollowUpDate")
                         .HasColumnType("date");
 
                     b.Property<string>("ImageUrl")
