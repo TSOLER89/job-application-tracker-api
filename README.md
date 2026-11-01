@@ -219,6 +219,9 @@ The API generates IDs; a client-supplied `id` is ignored.
 * `company`, `position`, `location`: required, not whitespace, at most 200 characters each. Values are trimmed before saving.
 * `status`: `Intresserad`, `Ansökt`, `Intervju`, `Erbjudande`, or `Avslag`. Defaults to `Ansökt` when omitted.
 * `dateApplied`: optional, valid `YYYY-MM-DD` date. Saved as `null` for `Intresserad`.
+* `applicationDeadline` and `followUpDate`: optional calendar dates (`YYYY-MM-DD` or `null`). They are independent of status and can be past dates for historical records. Empty strings, timestamps, and invalid calendar dates are rejected. Set `null` to remove a date. PUT replaces all editable fields, so clients must include dates they want to retain.
+
+Apply the additive `AddApplicationPlanningDates` migration with `dotnet ef database update` before starting the updated API. Existing jobs and ownership are preserved; both new fields initially contain `null`. This step stores planning dates; scheduled notifications and upcoming-event summaries are separate stages.
 * `notes`: optional, at most 5000 characters; omitted or null values become an empty string.
 * `imageUrl`: optional, at most 2048 characters; an upload path or an HTTP/HTTPS URL (for existing records with absolute URLs).
 

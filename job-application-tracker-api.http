@@ -66,6 +66,8 @@ Content-Type: application/json
   "position": "Systemutvecklare",
   "location": "Linköping",
   "dateApplied": "2026-09-17",
+  "applicationDeadline": "2026-09-30",
+  "followUpDate": "2026-10-01",
   "status": "Ansökt",
   "notes": "Test från .http-filen",
   "imageUrl": null
@@ -83,6 +85,8 @@ Content-Type: application/json
   "position": "Systemutvecklare .NET",
   "location": "Linköping",
   "dateApplied": "2026-09-17",
+  "applicationDeadline": "2026-09-30",
+  "followUpDate": null,
   "status": "Intervju",
   "notes": "Uppdaterad från .http-filen",
   "imageUrl": null
