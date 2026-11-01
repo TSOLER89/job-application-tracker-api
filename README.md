@@ -296,6 +296,10 @@ The API can be tested using Swagger or the `job-application-tracker-api.http` fi
 
 ## Integration Checks
 
+Gmail account connection is documented in [the local Gmail setup guide](docs/GMAIL_SETUP.md). Configure the Google web client in local user-secrets; the callback is `http://localhost:5250/signin-gmail`. The additive `AddEmailConnections` migration creates only connection/attempt tables. Existing applications and owners are unchanged. `GET /api/email-connections` returns only account-owned metadata, never provider tokens. Read-only Gmail consent, PKCE, browser correlation, session-bound one-time tickets and protected token storage are used. Outlook and application-email import are separate stages.
+
+Run the mocked OAuth security checks with `dotnet test tests/MailConnections.Tests/MailConnections.Tests.csproj`. They use their own `JobTrackMailVerification` database and never access real Google accounts.
+
 With Python 3.10+ installed, use a disposable LocalDB database in a separate terminal instead of the personal application database:
 
 ```powershell
