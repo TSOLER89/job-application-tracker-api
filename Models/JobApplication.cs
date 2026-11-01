@@ -4,6 +4,9 @@ public class JobApplication
 {
     public int Id { get; set; }
 
+    // Null is reserved for preserved legacy records until a local operator assigns an owner.
+    public string? UserId { get; set; }
+
     public string Company { get; set; } = string.Empty;
 
     public string Position { get; set; } = string.Empty;
